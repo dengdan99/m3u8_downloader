@@ -45,7 +45,7 @@ public class M3U8Ts implements Comparable<M3U8Ts> {
         if (url.startsWith("http")) {
             return url;
         }else if (url.startsWith("//")) {
-            return "http:".concat(url);
+            return "https:".concat(url);
         }else {
             return hostUrl.concat(url);
         }

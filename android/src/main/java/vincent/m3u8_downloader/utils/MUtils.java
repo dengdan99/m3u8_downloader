@@ -75,7 +75,12 @@ public class MUtils {
                 continue;
             }
             if (line.endsWith("m3u8")) {
-                return parseIndex(basePath + line);
+                if (line.startsWith("/")) {
+                    java.net.URL url = new java.net.URL(url);
+                    return parseIndex(url.getProtocol().concat('://').concat(url.getHost()));
+                } else {
+                    return parseIndex(basePath + line);
+                }
             }
             ret.addTs(new M3U8Ts(line, seconds));
             seconds = 0;
