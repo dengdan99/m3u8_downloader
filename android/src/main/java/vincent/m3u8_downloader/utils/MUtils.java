@@ -64,6 +64,12 @@ public class MUtils {
                                 v = v.replaceAll("\"", "");
                                 v = v.replaceAll("'", "");
                                 String keyUrl = basePath + v;
+                                if (v.startsWith("http")) {
+                                    keyUrl = v;
+                                }
+                                if (v.startsWith("/")) {
+                                    keyUrl = getHost(url) + v;
+                                }
                                 BufferedReader keyReader = new BufferedReader(new InputStreamReader(new URL(keyUrl).openStream()));
                                 ret.setKey(keyReader.readLine());
                             } else if (k.equals("IV")) {
@@ -74,20 +80,35 @@ public class MUtils {
                 }
                 continue;
             }
-            if (line.endsWith("m3u8")) {
+            if (line.endsWith("m3u8")|| line.lastIndexOf(".") < 0) {
                 if (line.startsWith("/")) {
-                    java.net.URL urlModel = new java.net.URL(url);
-                    return parseIndex(urlModel.getProtocol() + "://" + urlModel.getHost() + line);
+                    return parseIndex(getHost(url) + line);
                 } else {
                     return parseIndex(basePath + line);
                 }
             }
-            ret.addTs(new M3U8Ts(line, seconds));
+            if (line.startsWith("/") && line.endsWith("ts")) {
+                ret.addTs(new M3U8Ts(getHost(url) + line, seconds));
+            } else {
+                ret.addTs(new M3U8Ts(line, seconds));
+            }
+            
             seconds = 0;
         }
         reader.close();
 
         return ret;
+    }
+
+    public static String getHost(String url) {
+        String hostStr = "";
+        try {
+            java.net.URL urlModel = new java.net.URL(url);
+            hostStr = urlModel.getProtocol() + "://" + urlModel.getHost();
+        } catch(Exception ex) {
+            return hostStr;
+        }
+        return hostStr;
     }
 
 
