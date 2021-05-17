@@ -1,5 +1,7 @@
 package vincent.m3u8_downloader.utils;
 
+import android.text.TextUtils;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,6 +17,7 @@ import java.net.URL;
 import vincent.m3u8_downloader.M3U8DownloaderConfig;
 import vincent.m3u8_downloader.bean.M3U8;
 import vincent.m3u8_downloader.bean.M3U8Ts;
+import vincent.m3u8_downloader.utils.M3U8Log;
 
 /**
  * ================================================
@@ -38,6 +41,7 @@ public class MUtils {
         BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
 
         String basePath = url.substring(0, url.lastIndexOf("/") + 1);
+        boolean ignore = false;
 
         M3U8 ret = new M3U8();
         ret.setBasePath(basePath);
@@ -45,6 +49,12 @@ public class MUtils {
         String line;
         float seconds = 0;
         while ((line = reader.readLine()) != null) {
+            if (line.startsWith("#EXT-X-DISCONTINUITY")) {
+                ignore = !ignore;
+            }
+            if (ignore) {
+                continue;
+            }
             if (line.startsWith("#")) {
                 if (line.startsWith("#EXTINF:")) {
                     line = line.substring(8);
@@ -52,7 +62,7 @@ public class MUtils {
                         line = line.substring(0, line.length() - 1);
                     }
                     seconds = Float.parseFloat(line);
-                } else if (line.startsWith("#EXT-X-KEY:")) {
+                } else if (line.startsWith("#EXT-X-KEY:") && TextUtils.isEmpty(ret.getKey())) {
                     line = line.split("#EXT-X-KEY:")[1];
                     String[] arr = line.split(",");
                     for (int i = 0; i < arr.length; i++) {
@@ -72,6 +82,7 @@ public class MUtils {
                                 }
                                 BufferedReader keyReader = new BufferedReader(new InputStreamReader(new URL(keyUrl).openStream()));
                                 ret.setKey(keyReader.readLine());
+                                M3U8Log.d("设置key");
                             } else if (k.equals("IV")) {
                                 ret.setIv(v);
                             }
